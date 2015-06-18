@@ -396,6 +396,76 @@ module CombinePDF
 			end
 		end
 
+		# adds custom text in custom pages
+	  #
+	  # For unicode text, a unicode font(s) must first be registered. the registered font(s) must supply the
+	  # subset of characters used in the text. UNICODE IS AN ISSUE WITH THE PDF FORMAT - USE CAUSION.
+	  #
+	  # options:: a Hash of options setting the behavior and format of the page numbers:
+	  # - :stamp_location an Array containing the location for the page stamp, can be :top, :bottom, :top_left, :top_right, :bottom_left, :bottom_right. defaults to [:top, :buttom].
+	  # - :stamp_at a Range that sets the page numbers in which to insert stamp.
+	  # - :margin_from_height a number (PDF points) for the top and buttom margins. defaults to 45.
+	  # - :margin_from_side a number (PDF points) for the left and right margins. defaults to 15.
+	  # the options Hash can also take all the options for PDFWriter#textbox.
+	  # defaults to font: :Helvetica, font_size: 12 and no box (:border_width => 0, :box_color => nil).
+	  def stamp_pages(options = {})
+	    opt = {
+	      stamp_text: "-- #{Time.now.to_s} --",
+	      stamp_location: [:top, :bottom],
+	      stamp_at: nil,
+	      font_size: 12,
+	      font: :Helvetica,
+	      margin_from_height: 45,
+	      margin_from_side: 15
+	    }
+	    opt.update options
+	    if opt[:stamp_at]
+	      stamp_range = opt[:stamp_at].to_a
+	    else
+	      stamp_range = [pages.count - 2]
+	    end
+	    # pages.each_with_index{|p,i| opt[:stamp_at].include?(i)}
+	    pages.each_with_index.select{|a,i| stamp_range.include?(i)}.map(&:first).each do |page|
+	      # Get page dimensions
+	      mediabox = page[:CropBox] || page[:MediaBox] || [0, 0, 595.3, 841.9]
+	      # set stamp text
+	      text = opt[:stamp_text]
+	      # compute locations for text boxes
+	      text_dimantions = page.dimensions_of( text, opt[:font], opt[:font_size] )
+	      box_width = text_dimantions[0] * 1.2
+	      box_height = text_dimantions[1] * 2
+	      opt[:width] = box_width
+	      opt[:height] = box_height
+	      from_height = opt[:margin_from_height]
+	      from_side = opt[:margin_from_side]
+	      page_width = mediabox[2]
+	      page_height = mediabox[3]
+	      center_position = (page_width - box_width)/2
+	      left_position = from_side
+	      right_position = page_width - from_side - box_width
+	      top_position = page_height - from_height
+	      bottom_position = from_height + box_height
+	      if opt[:stamp_location].include? :top
+	         page.textbox text, {x: center_position, y: top_position }.merge(opt)
+	      end
+	      if opt[:stamp_location].include? :bottom
+	         page.textbox text, {x: center_position, y: bottom_position }.merge(opt)
+	      end
+	      if opt[:stamp_location].include? :top_left
+	         page.textbox text, {x: left_position, y: top_position }.merge(opt)
+	      end
+	      if opt[:stamp_location].include? :bottom_left
+	         page.textbox text, {x: left_position, y: bottom_position }.merge(opt)
+	      end
+	      if opt[:stamp_location].include? :top_right
+	         page.textbox text, {x: right_position, y: top_position }.merge(opt)
+	      end
+	      if opt[:stamp_location].include? :bottom_right
+	         page.textbox text, {x: right_position, y: bottom_position }.merge(opt)
+	      end
+	    end
+	  end
+
 	end
 
 end

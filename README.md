@@ -72,6 +72,20 @@ pdf.save "file_with_numbering.pdf"
 
 Numbering can be done with many different options, with different formating, with or without a box object, and even with opacity values - see documentation.
 
+## Page Stamp / Watermark
+
+adding page stamps or watermark to a PDF object or file is as simple as can be:
+
+```ruby
+pdf = CombinePDF.load "file_to_number.pdf"
+pdf.stamp_pages(stamp_text: 'This is a stamp')
+pdf.save "file_with_numbering.pdf"
+```
+
+Stamping can be done with many different options, with or without a box object, and even with opacity values - see documentation.
+It defaults to stamping just the penultime page. If you wish to stamp other pages use stamp_at (Range)
+
+
 ## Loading PDF data
 
 Loading PDF data can be done from file system or directly from the memory.
