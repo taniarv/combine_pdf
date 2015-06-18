@@ -20,7 +20,7 @@ module CombinePDF
 			when object.nil?
 				return "null"
 			when object.is_a?(String)
-				return format_string_to_pdf object
+				return format_string_to_pdf object.dup
 			when object.is_a?(Symbol)
 				return format_name_to_pdf object
 			when object.is_a?(Array)

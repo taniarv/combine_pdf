@@ -106,9 +106,9 @@ module CombinePDF
 
 			# general globals
 			@set_start_id = 1
-			@info[:Producer] = "Ruby CombinePDF #{CombinePDF::VERSION} Library by B. Segev"
-			@info.delete :CreationDate
-			@info.delete :ModDate
+			# @info[:Producer] = "Ruby CombinePDF #{CombinePDF::VERSION} Library by B. Segev"
+			# @info.delete :CreationDate
+			# @info.delete :ModDate
 		end
 
 		# adds a new page to the end of the PDF object.
@@ -149,8 +149,8 @@ module CombinePDF
 		# file_name:: is a string or path object for the output.
 		#
 		# **Notice!** if the file exists, it **WILL** be overwritten.
-		def save(file_name)
-			IO.binwrite file_name, to_pdf
+		def save(file_name, options={})
+			IO.binwrite file_name, to_pdf(options)
 		end
 
 		# Formats the data to PDF formats and returns a binary string that represents the PDF file content.
@@ -158,11 +158,9 @@ module CombinePDF
 		# This method is used by the save(file_name) method to save the content to a file.
 		#
 		# use this to export the PDF file without saving to disk (such as sending through HTTP ect').
-		def to_pdf
+		def to_pdf(options={})
 			#reset version if not specified
 			@version = 1.5 if @version.to_f == 0.0
-			#set creation date for merged file
-			@info[:CreationDate] = Time.now.strftime "D:%Y%m%d%H%M%S%:::z'00"
 			#rebuild_catalog
 			catalog = rebuild_catalog_and_objects
 			# add ID and generation numbers to objects
@@ -193,6 +191,14 @@ module CombinePDF
 			out << "/Size #{indirect_object_count.to_s}"
 			if @info.is_a?(Hash)
 				PRIVATE_HASH_KEYS.each {|key| @info.delete key} # make sure the dictionary is rendered inline, without stream
+
+				#set creation date for merged file
+				@info[:CreationDate] = Time.now.strftime "D:%Y%m%d%H%M%S%:::z'00"
+				@info[:ModDate] = Time.now.strftime "D:%Y%m%d%H%M%S%:::z'00"
+				if options[:subject]
+					@info[:Subject] = options[:subject]
+				end
+
 				out << "/Info #{object_to_pdf @info}"
 			end
 			out << ">>\nstartxref\n#{xref_location.to_s}\n%%EOF"
